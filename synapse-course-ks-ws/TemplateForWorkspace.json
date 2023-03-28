@@ -410,6 +410,9 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
+				"folder": {
+					"name": "demo"
+				},
 				"annotations": [],
 				"lastPublishTime": "2023-03-27T18:11:02Z"
 			},
@@ -481,6 +484,9 @@
 				"policy": {
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "demo"
 				},
 				"annotations": [],
 				"lastPublishTime": "2023-03-27T18:18:03Z"
@@ -712,6 +718,9 @@
 				"linkedServiceName": {
 					"referenceName": "ls_synapsecoursedl",
 					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "demo"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -1457,6 +1466,19 @@
 					"resultLimit": 5000
 				},
 				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Pipeline 1')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
 			},
 			"dependsOn": []
 		}
