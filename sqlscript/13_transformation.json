@@ -1,0 +1,20 @@
+{
+	"name": "13_transformation",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/discovery"
+		},
+		"content": {
+			"query": "\n\nuse nyc_taxi_discovery;\n\n-- Number of trips made by duration in hours\n\n\n\nSELECT \n    DATEDIFF(HOUR, [start], [end]) time_diff,\n    count(*) trips\nFROM\n    OPENROWSET(\n        BULK '/raw/trip_data_green_parquet/**',\n        FORMAT = 'PARQUET',\n        DATA_SOURCE = 'nyc_taxi_data'\n    ) --AS [trip_data_green_csv]\n    with (\n        \"start\" DATETIME2 '$.lpep_pickup_datetime',\n        \"end\" DATETIME2 '$.lpep_dropoff_datetime'\n    )\n    AS [trip_data_green_csv]\n    GROUP by  DATEDIFF(HOUR, [start], [end]) \n    order by count(*) desc\n;\n\n\n\n\n\n-- Assignment\n\nwith payment_type as (\n   SELECT \n   payment_type, description from\n    OPENROWSET(\n        BULK '/raw/payment_type.json',\n        DATA_SOURCE = 'nyc_taxi_data',\n        FORMAT = 'CSV',\n        FIELDTERMINATOR = '0x0b',\n        FIELDQUOTE = '0x0b'\n    )\n    WITH\n    (\n        jsonDoc NVARCHAR(MAX)\n    ) AS payment_type\n    CROSS APPLY OPENJSON(jsonDoc)\n    WITH(\n        payment_type SMALLINT,\n        description VARCHAR(20) '$.payment_type_desc'\n    ) \n),\n\njoined_data as (\n\n    SELECT \n        trip_data_green.*,\n        taxi_zone.*,\n        payment_type.description\n    FROM\n        OPENROWSET(\n            BULK '/raw/trip_data_green_parquet/**',\n            FORMAT = 'PARQUET',\n            DATA_SOURCE = 'nyc_taxi_data'\n        ) AS [trip_data_green]\n        left JOIN\n        OPENROWSET(\n            BULK '/raw/taxi_zone.csv',\n            DATA_SOURCE = 'nyc_taxi_data',\n            FORMAT = 'CSV',\n            PARSER_VERSION = '2.0',\n            HEADER_ROW = TRUE,\n            FIELDTERMINATOR = ',',\n            ROWTERMINATOR = '\\n'\n        ) AS  [taxi_zone]\n        on trip_data_green.PULocationID = taxi_zone.LocationID\n        left JOIN payment_type on payment_type.payment_type = trip_data_green.payment_type\n        ),\n\ngrp as (\n\n    SELECT\n    Borough,\n    count(*) total_trips,\n    sum( case when [description] = 'Cash' then 1 else 0 end) cash_trips,\n    sum( case when [description] = 'Credit card' then 1 else 0 end) card_trips\n\n    from joined_data\n    group by Borough\n)\n\nSELECT\nBorough,\ntotal_trips,\ncash_trips,\ncard_trips,\nround((cast(cash_trips as float)/cast(total_trips as float))*100,2) cash_trips_percentage,\nround((cast(card_trips as float)/cast(total_trips as float))*100,2) card_trips_percentage\nfrom grp\norder by Borough;\n\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_discovery",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"name": "assignment_1",
+	"properties": {
+		"folder": {
+			"name": "assignments"
+		},
+		"content": {
+			"query": "\n\n-- create DATABASE calendar;\n\n-- alter database calendar collate Latin1_General_100_CI_AI_SC_UTF8; \n\nuse nyc_taxi_discovery;\n\n-- drop EXTERNAL DATA SOURCE calendar_data;\n\n-- CREATE EXTERNAL DATA SOURCE calendar_data \n-- WITH (\n--     LOCATION = 'abfss://nyc-taxi-data@synapsecourseksdl.dfs.core.windows.net'\n-- )\n\n\n\n\nselect top 10 * from\nOPENROWSET (\n    BULK '/raw/calendar.csv',\n    data_source = 'nyc_taxi_data',\n    FORMAT = 'CSV',\n    PARSER_VERSION = '2.0',\n    HEADER_ROW = TRUE  \n) as [res];\n\n\n\n\nselect * from\nOPENROWSET (\n    BULK '/raw/calendar.csv',\n    data_source = 'calendar_data',\n    FORMAT = 'CSV',\n    PARSER_VERSION = '2.0',\n    HEADER_ROW = TRUE  \n) \nWITH\n(\n    date_key int,\n    date date,\n    \"year\" SMALLINT,\n    \"month\" TINYINT,\n    \"day\" TINYINT,\n    day_name VARCHAR(20),\n    \"day_of_year\" SMALLINT,\n    \"week_of_month\" TINYINT,\n    \"week_of_year\" TINYINT,\n    month_name VARCHAR(20),    \n    year_month int, \n    year_week int\n    )\n\nas [res];",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_discovery",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"name": "7_create_silver_json_source",
+	"properties": {
+		"folder": {
+			"name": "ldw"
+		},
+		"content": {
+			"query": "use nyc_taxi_ldw;\n\n\n\nIF OBJECT_ID('silver.rate_code') IS NOT NULL\n    DROP EXTERNAL TABLE silver.rate_code\nGO\n\nCREATE EXTERNAL TABLE silver.rate_code\n    with \n    (\n        DATA_SOURCE = nyc_taxi_src,\n        location = 'silver/rate_code',\n        file_format = parquet_file_format\n    )\nAS\nSELECT \n    rate_code_id,\n    rate_code\n    \n    FROM\n        OPENROWSET (\n            BULK '/raw/rate_code.json',\n            data_source = 'nyc_taxi_src',\n            FORMAT = 'CSV',\n            FIELDTERMINATOR = '0x0b',\n            FIELDQUOTE = '0x0b',\n            ROWTERMINATOR = '0x0b' --necessary\n        ) \n        WITH\n        (\n            jsonDoc NVARCHAR(MAX) \n        )\n        AS [rate_code]\n        CROSS APPLY OPENJSON(jsonDoc)\n        WITH(\n            rate_code_id TINYINT,\n            rate_code VARCHAR(20) \n        );\n\n\n-- select top 10 * from silver.rate_code;\n\n\n\n\nIF OBJECT_ID('silver.payment_type') IS NOT NULL\n    DROP EXTERNAL TABLE silver.payment_type\nGO\n\nCREATE EXTERNAL TABLE silver.payment_type\n    with \n    (\n        DATA_SOURCE = nyc_taxi_src,\n        location = 'silver/payment_type',\n        file_format = parquet_file_format\n    )\nAS\nSELECT \n   payment_type,\n   payment_type_desc\nFROM\n    OPENROWSET (\n        BULK '/raw/payment_type.json',\n        data_source = 'nyc_taxi_src',\n        FORMAT = 'CSV',\n        FIELDTERMINATOR = '0x0b',\n        FIELDQUOTE = '0x0b'\n    ) \n    WITH\n    (\n       jsonDoc NVARCHAR(MAX) \n    )\n    AS [payment_type]\n    CROSS APPLY OPENJSON(jsonDoc)\n    with (\n        payment_type SMALLINT,\n        payment_type_desc VARCHAR(20)\n    );\n\n\n-- select top 10 * from silver.payment_type;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

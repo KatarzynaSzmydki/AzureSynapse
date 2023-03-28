@@ -1,0 +1,20 @@
+{
+	"name": "07_explore_trip_data_green_csv",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/discovery"
+		},
+		"content": {
+			"query": "\nuse nyc_taxi_discovery;\n\n\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ('/raw/trip_data_green_csv/year=2020/month=01/**',\n        '/raw/trip_data_green_csv/year=2020/month=02/**'),\n        data_source = 'nyc_taxi_data',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0',\n        HEADER_ROW = True\n    ) AS [trip_data_green_csv]\n;\n\n\n\n-- Use file path in the where clause\nSELECT\n    result.filepath(1) AS year,\n    result.filepath(2) AS month,\n    COUNT(1) AS record_count\nFROM\n    OPENROWSET(\n        BULK 'trip_data_green_csv/year=*/month=*/*.csv',\n        DATA_SOURCE = 'nyc_taxi_data_raw',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0',\n        HEADER_ROW = TRUE\n    ) AS [result]\n--WHERE result.filepath(1) = '2020'\n--  AND result.filepath(2) IN ('06', '07', '08')\nGROUP BY result.filename(), result.filepath(1), result.filepath(2)\nORDER BY result.filename(), result.filepath(1), result.filepath(2);\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_discovery",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
