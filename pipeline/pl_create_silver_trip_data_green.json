@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Script1",
+				"name": "Get Trip Year and Month",
 				"type": "Script",
 				"dependsOn": [],
 				"policy": {
@@ -14,8 +14,17 @@
 					"secureInput": false
 				},
 				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_serverless_sql_pool_db_nyc_taxi_ldw",
+					"type": "LinkedServiceReference"
+				},
 				"typeProperties": {
-					"scripts": [],
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "USE nyc_taxi_ldw;\n\nselect distinct year, month from bronze.vw_trip_data_green_csv;"
+						}
+					],
 					"scriptBlockExecutionTimeout": "02:00:00"
 				}
 			}
