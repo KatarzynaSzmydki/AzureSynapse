@@ -1,0 +1,20 @@
+{
+	"name": "1_ctas_trip_data_green",
+	"properties": {
+		"folder": {
+			"name": "dwh"
+		},
+		"content": {
+			"query": "\nCREATE SCHEMA staging\t\nGO\n\n\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'parquet_file_format') \n\tCREATE EXTERNAL FILE FORMAT parquet_file_format \n\tWITH ( FORMAT_TYPE = PARQUET)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'nyc_taxi_data_src') \n\tCREATE EXTERNAL DATA SOURCE nyc_taxi_data_src\n\tWITH (\n\t\tLOCATION = 'abfss://nyc-taxi-data@synapsecourseksdl.dfs.core.windows.net' \n\t)\nGO\n\nCREATE EXTERNAL TABLE staging.ext_trip_data_green (\n\t[year] nvarchar(4000),\n\t[month] nvarchar(4000),\n\t[borough] nvarchar(4000),\n\t[trip_date] date,\n\t[trip_day] nvarchar(4000),\n\t[trip_day_weekend_ind] nvarchar(4000),\n\t[card_trip_count] int,\n\t[cash_trip_count] int,\n\t[street_hail_trip_count] int,\n\t[dispatch_trip_count] int,\n\t[trip_distance] float,\n\t[trip_duration] int,\n\t[fare_amount] float\n\t)\n\tWITH (\n\tLOCATION = 'gold/trip_data_green',\n\tDATA_SOURCE = nyc_taxi_data_src,\n\tFILE_FORMAT = parquet_file_format\n\t)\nGO\n\n\nSELECT TOP 100 * FROM staging.ext_trip_data_green\nGO\n\n\n\nCREATE SCHEMA dwh\t\nGO\n\nCREATE TABLE dwh.ext_trip_data_green\nwith (\n\tCLUSTERED COLUMNSTORE INDEX,\n\tDISTRIBUTION = ROUND_ROBIN\n)\nAS SELECT * FROM staging.ext_trip_data_green",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_dwh",
+				"poolName": "nyc_taxi_dwh"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
